@@ -66,12 +66,33 @@ agent.clear_history()
 python example.py
 ```
 
+## Telegram Bot
+
+You can chat with b-agent on your phone via Telegram.
+
+### Setup
+
+1. Open Telegram and message [@BotFather](https://t.me/BotFather)
+2. Send `/newbot`, pick a name, and copy the token
+3. Add the token to your `.env`:
+   ```
+   TELEGRAM_BOT_TOKEN=your-token-here
+   ```
+4. Start the bot:
+   ```bash
+   python telegram_bot.py
+   ```
+5. Open your bot in Telegram and start chatting!
+
+Use `/clear` in the chat to reset conversation history.
+
 ## Project Structure
 
 ```
 b-agent/
 ├── agent.py            # Core Agent class with tool-use loop
 ├── main.py             # Interactive terminal chat
+├── telegram_bot.py     # Telegram bot interface
 ├── example.py          # Programmatic usage examples
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # API key template
