@@ -32,6 +32,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Suppress httpx request logs — they contain the bot token in URLs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 # One Agent per chat so each conversation has its own memory
 agents: dict[int, Agent] = {}
 
