@@ -9,6 +9,7 @@ A Python AI agent powered by Claude with tool-use capabilities.
 - **File Processing** — Read text, PDF, and DOCX files
 - **API Integration** — Make HTTP requests to external APIs
 - **Task Automation** — Run shell commands and Python snippets
+- **Google Calendar** — Check upcoming events from your calendar
 
 ## Setup
 
@@ -66,6 +67,19 @@ agent.clear_history()
 python example.py
 ```
 
+## Google Calendar
+
+The agent can check your Google Calendar when you ask things like "What's on my calendar today?"
+
+### Setup
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (or select an existing one)
+3. Enable the **Google Calendar API** (APIs & Services → Enable APIs)
+4. Create OAuth credentials (APIs & Services → Credentials → Create Credentials → OAuth client ID → Desktop app)
+5. Download the JSON file and save it as `credentials.json` in the project root
+6. The first time you ask about your calendar, a browser window will open to sign in with Google
+
 ## Telegram Bot
 
 You can chat with b-agent on your phone via Telegram.
@@ -99,8 +113,9 @@ b-agent/
 ├── tools/
 │   ├── web_search.py   # Web search and page fetching
 │   ├── file_processor.py  # Text, PDF, and DOCX reading
-│   ├── api_client.py   # HTTP API requests
-│   └── task_runner.py  # Shell commands and Python execution
+│   ├── api_client.py      # HTTP API requests
+│   ├── google_calendar.py # Google Calendar integration
+│   └── task_runner.py     # Shell commands and Python execution
 └── utils/              # Helper modules
 ```
 
