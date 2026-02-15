@@ -53,30 +53,45 @@ def get_calendar_events(days: int = 1) -> str:
         now = datetime.now(timezone.utc)
         end = now + timedelta(days=days)
 
-        result = (
-            service.events()
-            .list(
-                calendarId="primary",
-                timeMin=now.isoformat(),
-                timeMax=end.isoformat(),
-                singleEvents=True,
-                orderBy="startTime",
+        # Get all calendars the user has access to
+        calendars = service.calendarList().list().execute().get("items", [])
+
+        all_events = []
+        for cal in calendars:
+            result = (
+                service.events()
+                .list(
+                    calendarId=cal["id"],
+                    timeMin=now.isoformat(),
+                    timeMax=end.isoformat(),
+                    singleEvents=True,
+                    orderBy="startTime",
+                )
+                .execute()
             )
-            .execute()
+            for event in result.get("items", []):
+                event["_calendar_name"] = cal.get("summary", "")
+                all_events.append(event)
+
+        # Sort all events by start time
+        all_events.sort(
+            key=lambda e: e["start"].get("dateTime", e["start"].get("date"))
         )
 
-        events = result.get("items", [])
-        if not events:
+        if not all_events:
             return f"No events found in the next {days} day(s)."
 
         lines = [f"Events in the next {days} day(s):\n"]
-        for event in events:
+        for event in all_events:
             start = event["start"].get("dateTime", event["start"].get("date"))
             end_time = event["end"].get("dateTime", event["end"].get("date"))
             summary = event.get("summary", "(No title)")
             location = event.get("location", "")
 
+            cal_name = event.get("_calendar_name", "")
             line = f"• {summary}\n  {start} → {end_time}"
+            if cal_name:
+                line += f"\n  Calendar: {cal_name}"
             if location:
                 line += f"\n  Location: {location}"
             lines.append(line)
