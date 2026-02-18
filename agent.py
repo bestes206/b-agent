@@ -23,7 +23,6 @@ from tools.web_search import search_web, fetch_page
 from tools.file_processor import read_file, list_files
 from tools.task_runner import run_command, run_python
 from tools.api_client import api_request
-from tools.google_calendar import get_calendar_events
 
 # Load environment variables from .env
 load_dotenv()
@@ -144,21 +143,6 @@ TOOL_DEFINITIONS = [
             "required": ["url"],
         },
     },
-    {
-        "name": "get_calendar_events",
-        "description": "Get upcoming events from the user's Google Calendar.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "days": {
-                    "type": "integer",
-                    "description": "Number of days ahead to look. Defaults to 1 (today).",
-                    "default": 1,
-                },
-            },
-            "required": [],
-        },
-    },
 ]
 
 # Map tool names to their Python functions
@@ -170,7 +154,6 @@ TOOL_FUNCTIONS = {
     "run_command": run_command,
     "run_python": run_python,
     "api_request": api_request,
-    "get_calendar_events": get_calendar_events,
 }
 
 # ---------------------------------------------------------------------------
