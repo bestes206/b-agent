@@ -26,19 +26,21 @@ from pipeline.fetchers.base import SODAFetcher
 from pipeline.fetchers.code_violations import CodeViolationsFetcher
 from pipeline.fetchers.fire_calls import FireCallsFetcher
 from pipeline.fetchers.permits import PermitsFetcher
+from pipeline.fetchers.recent_sales import RecentSalesFetcher
 from pipeline.fetchers.urm_buildings import URMBuildingsFetcher
 from pipeline.normalize import normalize_address
 from pipeline.scoring import load_config, rescore_all
 
-FETCHERS: Dict[str, Type[SODAFetcher]] = {
+FETCHERS: Dict[str, Type] = {
     "code_violations": CodeViolationsFetcher,
     "permits": PermitsFetcher,
     "fire_911": FireCallsFetcher,
     "urm": URMBuildingsFetcher,
+    "king_county_sales": RecentSalesFetcher,
 }
 
 
-def run_fetcher(conn, fetcher: SODAFetcher) -> tuple:
+def run_fetcher(conn, fetcher) -> tuple:
     """Run a single fetcher, upserting properties and signals.
 
     Returns (properties_touched, signals_inserted).
@@ -96,7 +98,7 @@ def run_fetcher(conn, fetcher: SODAFetcher) -> tuple:
     return (props_touched, signals_inserted)
 
 
-def _check_normalization_issues(conn, fetcher: SODAFetcher):
+def _check_normalization_issues(conn, fetcher):
     """Post-pass: find signals whose properties might be duplicates based on proximity."""
     # This is a lightweight check — for each property that only appears in one source,
     # see if there's a nearby property from a different source

@@ -22,10 +22,11 @@ class PermitsFetcher(SODAFetcher):
 
     def build_where_clause(self) -> str:
         zips = ",".join(f"'{z}'" for z in WEST_SEATTLE_ZIPS)
-        # Focus on expired, canceled, or demolition permits
+        # Expired, canceled, demolition, plus active/completed (negative signals)
         return (
             f"originalzip in({zips}) AND "
             f"(statuscurrent = 'Expired' OR statuscurrent = 'Canceled' OR "
+            f"statuscurrent = 'Issued' OR statuscurrent = 'Completed' OR "
             f"upper(description) like '%DEMOLISH%' OR upper(description) like '%DEMOLITION%')"
         )
 
@@ -53,6 +54,10 @@ class PermitsFetcher(SODAFetcher):
         # Determine signal type
         if "DEMOLISH" in description or "DEMOLITION" in description:
             signal_type = "demolished"
+        elif status == "ISSUED":
+            signal_type = "active_permit"
+        elif status == "COMPLETED":
+            signal_type = "completed_permit_recent"
         elif status == "EXPIRED":
             try:
                 cost = float(record.get("estprojectcost") or 0)

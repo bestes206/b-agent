@@ -33,6 +33,9 @@ SODA_APP_TOKEN = os.environ.get("SODA_APP_TOKEN")
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = PROJECT_ROOT / "data" / "distressed.db"
 
+# Downloads directory (for KC assessor CSVs, etc.)
+DOWNLOADS_DIR = PROJECT_ROOT / "data" / "downloads"
+
 # Scoring config
 SCORING_CONFIG_PATH = Path(__file__).resolve().parent / "scoring_config.yaml"
 

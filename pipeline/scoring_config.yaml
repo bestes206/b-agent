@@ -18,6 +18,8 @@ signal_weights:
   expired_permit_minor: 5
   demolished: 5
   permit_cancelled: 3
+  active_permit: -8             # negative — active permits suggest renovation
+  completed_permit_recent: -6   # negative — recently completed work
 
   # Fire (source: fire_911)
   residential_fire: 10
@@ -28,18 +30,32 @@ signal_weights:
   urm_no_retrofit: 5
   urm_retrofitted: 2
 
+  # Recent sales (source: king_county_sales)
+  recently_sold: -15            # negative — recent sale suggests active ownership
+
 # --- Bonuses ---
 bonuses:
   multi_source_threshold: 2     # number of distinct sources to trigger bonus
   multi_source_points: 5
 
-# --- Recency ---
+# --- Recency (decay curve) ---
 recency:
-  boost_multiplier: 1.5         # applied to signals newer than cutoff
-  cutoff_days: 365
+  max_age_days: 1825            # 5 years — older signals excluded entirely
+  decay_boost: 0.5              # at age 0: 1.5x, at max_age: 1.0x (linear)
+
+# --- Status multipliers ---
+# Per-source penalties for resolved/closed statuses.
+# Signals with these statuses get their weight multiplied down.
+status_multipliers:
+  code_violations:
+    closed: 0.2
+    completed: 0.2
+    compliance achieved: 0.3
+    withdrawn: 0.1
+    open duplicate: 0.1
 
 # --- Tier thresholds ---
 tiers:
-  A: 25    # >= this score
-  B: 12    # >= this score
+  A: 15    # >= this score
+  B: 8     # >= this score
   # below B = tier C
