@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distressed Properties — West Seattle</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #e0e0e0; }
+
+  .layout { display: flex; height: 100vh; }
+  .panel-left { flex: 1; overflow-y: auto; padding: 16px; min-width: 0; }
+  .panel-right { width: 420px; border-left: 1px solid #2a2d35; display: flex; flex-direction: column; background: #161820; }
+  .panel-right.hidden { display: none; }
+
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .header h1 { font-size: 20px; font-weight: 600; color: #fff; }
+  .stats { font-size: 13px; color: #888; }
+  .stats span { margin-left: 12px; }
+
+  /* Filters */
+  .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .filters input, .filters select {
+    background: #1c1f2b; border: 1px solid #2a2d35; color: #e0e0e0;
+    padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none;
+  }
+  .filters input:focus, .filters select:focus { border-color: #4a7dff; }
+  .filters input::placeholder { color: #555; }
+  .filter-group { display: flex; align-items: center; gap: 4px; }
+  .filter-group label { font-size: 12px; color: #888; white-space: nowrap; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    position: sticky; top: 0; background: #1a1d27; padding: 8px 10px;
+    text-align: left; font-weight: 600; color: #aaa; cursor: pointer;
+    border-bottom: 2px solid #2a2d35; user-select: none; white-space: nowrap;
+  }
+  thead th:hover { color: #fff; }
+  thead th .arrow { margin-left: 4px; font-size: 10px; }
+  tbody tr { border-bottom: 1px solid #1e2130; cursor: pointer; transition: background 0.1s; }
+  tbody tr:hover { background: #1c2035; }
+  tbody tr.selected { background: #1e2a4a; }
+  td { padding: 7px 10px; white-space: nowrap; }
+
+  /* Tier badges */
+  .tier { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 12px; }
+  .tier-A { background: #2d6a2e; color: #6fcf6f; }
+  .tier-B { background: #5c5a1e; color: #d4cf5a; }
+  .tier-C { background: #333; color: #888; }
+
+  /* Source pills */
+  .pill { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 11px; margin-right: 3px; }
+  .pill-code_violations { background: #3a1f1f; color: #e88; }
+  .pill-permits { background: #1f2f3a; color: #6be; }
+  .pill-fire_911 { background: #3a2a1a; color: #eb6; }
+  .pill-urm { background: #2a1f3a; color: #b8e; }
+
+  /* Pagination */
+  .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 12px 0; font-size: 13px; }
+  .pagination button {
+    background: #1c1f2b; border: 1px solid #2a2d35; color: #e0e0e0;
+    padding: 4px 12px; border-radius: 4px; cursor: pointer;
+  }
+  .pagination button:hover { border-color: #4a7dff; }
+  .pagination button:disabled { opacity: 0.3; cursor: default; }
+  .pagination .page-info { color: #888; }
+
+  /* Right panel */
+  .detail-header { padding: 16px; border-bottom: 1px solid #2a2d35; }
+  .detail-header h2 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  .detail-header .meta { font-size: 12px; color: #888; }
+  .streetview-wrap { height: 280px; background: #111; flex-shrink: 0; }
+  .streetview-wrap iframe { width: 100%; height: 100%; border: 0; }
+  .signals-list { flex: 1; overflow-y: auto; padding: 12px 16px; }
+  .signal-card {
+    background: #1c1f2b; border: 1px solid #2a2d35; border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 8px;
+  }
+  .signal-card .signal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .signal-card .signal-type { font-weight: 600; font-size: 13px; color: #e0e0e0; }
+  .signal-card .signal-date { font-size: 11px; color: #888; }
+  .signal-card .signal-detail { font-size: 12px; color: #999; line-height: 1.5; }
+  .signal-card .signal-detail span { display: block; }
+  .empty-detail { display: flex; align-items: center; justify-content: center; height: 100%; color: #555; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="panel-left">
+    <div class="header">
+      <h1>Distressed Properties</h1>
+      <div class="stats" id="stats"></div>
+    </div>
+
+    <div class="filters">
+      <input type="text" id="search" placeholder="Search address..." style="width: 200px;">
+      <div class="filter-group">
+        <label>Tier</label>
+        <select id="filter-tier">
+          <option value="">All</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Zip</label>
+        <select id="filter-zip">
+          <option value="">All</option>
+          <option value="98106">98106</option>
+          <option value="98116">98116</option>
+          <option value="98126">98126</option>
+          <option value="98136">98136</option>
+          <option value="98146">98146</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Source</label>
+        <select id="filter-source">
+          <option value="">All</option>
+          <option value="code_violations">Code Violations</option>
+          <option value="permits">Permits</option>
+          <option value="fire_911">Fire 911</option>
+          <option value="urm">URM</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Min Score</label>
+        <input type="number" id="filter-min-score" style="width: 70px;" placeholder="0">
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="tier">Tier <span class="arrow"></span></th>
+            <th data-col="total_score">Score <span class="arrow"></span></th>
+            <th data-col="address_raw">Address <span class="arrow"></span></th>
+            <th data-col="zip_code">Zip <span class="arrow"></span></th>
+            <th data-col="signal_count">Signals <span class="arrow"></span></th>
+            <th data-col="source_count">Sources <span class="arrow"></span></th>
+            <th>Tags</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button id="prev-page">&laquo; Prev</button>
+      <span class="page-info" id="page-info"></span>
+      <button id="next-page">Next &raquo;</button>
+    </div>
+  </div>
+
+  <div class="panel-right hidden" id="detail-panel">
+    <div class="detail-header">
+      <h2 id="detail-address"></h2>
+      <div class="meta" id="detail-meta"></div>
+    </div>
+    <div class="streetview-wrap" id="streetview-wrap"></div>
+    <div class="signals-list" id="signals-list"></div>
+  </div>
+</div>
+
+<script>
+const API_KEY = "{{ google_maps_api_key }}";
+let state = { page: 1, sort: "total_score", dir: "desc", selected: null };
+let propertiesCache = {};  // id -> property data
+
+// --- Fetch & render ---
+async function loadProperties() {
+  const params = new URLSearchParams({
+    page: state.page,
+    sort: state.sort,
+    dir: state.dir,
+    per_page: 50,
+  });
+  const tier = document.getElementById("filter-tier").value;
+  const zip = document.getElementById("filter-zip").value;
+  const source = document.getElementById("filter-source").value;
+  const minScore = document.getElementById("filter-min-score").value;
+  const search = document.getElementById("search").value;
+
+  if (tier) params.set("tier", tier);
+  if (zip) params.set("zip", zip);
+  if (source) params.set("source", source);
+  if (minScore) params.set("min_score", minScore);
+  if (search) params.set("search", search);
+
+  const resp = await fetch("/api/properties?" + params);
+  const data = await resp.json();
+  renderTable(data.properties);
+  renderPagination(data);
+}
+
+function renderTable(properties) {
+  properties.forEach(p => { propertiesCache[p.id] = p; });
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = properties.map(p => `
+    <tr data-id="${p.id}" class="${state.selected === p.id ? 'selected' : ''}"
+        onclick="selectProperty(${p.id}, this)">
+      <td><span class="tier tier-${p.tier}">${p.tier}</span></td>
+      <td>${p.total_score.toFixed(1)}</td>
+      <td>${esc(p.address_raw)}</td>
+      <td>${p.zip_code || ""}</td>
+      <td>${p.signal_count}</td>
+      <td>${p.source_count}</td>
+      <td>${p.sources.map(s => `<span class="pill pill-${s}">${formatSource(s)}</span>`).join("")}</td>
+    </tr>
+  `).join("");
+
+  // Update sort arrows
+  document.querySelectorAll("thead th").forEach(th => {
+    const col = th.dataset.col;
+    const arrow = th.querySelector(".arrow");
+    if (!arrow) return;
+    if (col === state.sort) {
+      arrow.textContent = state.dir === "asc" ? "\u25B2" : "\u25BC";
+    } else {
+      arrow.textContent = "";
+    }
+  });
+}
+
+function renderPagination(data) {
+  document.getElementById("page-info").textContent =
+    `Page ${data.page} of ${data.pages} (${data.total.toLocaleString()} properties)`;
+  document.getElementById("prev-page").disabled = data.page <= 1;
+  document.getElementById("next-page").disabled = data.page >= data.pages;
+}
+
+async function loadStats() {
+  const resp = await fetch("/api/stats");
+  const data = await resp.json();
+  document.getElementById("stats").innerHTML =
+    `<span>${data.total_properties.toLocaleString()} properties</span>` +
+    `<span>${data.total_signals.toLocaleString()} signals</span>` +
+    Object.entries(data.tiers).map(([t, c]) =>
+      `<span>Tier ${t}: ${c.toLocaleString()}</span>`
+    ).join("");
+}
+
+// --- Property detail ---
+async function selectProperty(id, row) {
+  state.selected = id;
+  document.querySelectorAll("tbody tr").forEach(r => r.classList.remove("selected"));
+  row.classList.add("selected");
+
+  const panel = document.getElementById("detail-panel");
+  panel.classList.remove("hidden");
+
+  const p = propertiesCache[id];
+  document.getElementById("detail-address").textContent = p.address_raw;
+  document.getElementById("detail-meta").textContent =
+    `${p.zip_code || ""} \u2022 Tier ${p.tier} \u2022 Score ${p.total_score.toFixed(1)}`;
+
+  // Street View — use lat/lng coordinates
+  const svWrap = document.getElementById("streetview-wrap");
+  if (p.latitude && p.longitude) {
+    svWrap.innerHTML = `<iframe src="https://www.google.com/maps/embed/v1/streetview?key=${API_KEY}&location=${p.latitude},${p.longitude}&heading=0&pitch=0&fov=90"
+      allowfullscreen loading="lazy"></iframe>`;
+  } else {
+    // Fallback to address-based place embed if no coordinates
+    const query = encodeURIComponent(p.address_raw + ", Seattle, WA " + (p.zip_code || ""));
+    svWrap.innerHTML = `<iframe src="https://www.google.com/maps/embed/v1/place?key=${API_KEY}&q=${query}"
+      allowfullscreen loading="lazy"></iframe>`;
+  }
+
+  // Load signals
+  const resp = await fetch(`/api/properties/${id}/signals`);
+  const signals = await resp.json();
+  renderSignals(signals);
+}
+
+function renderSignals(signals) {
+  const list = document.getElementById("signals-list");
+  if (!signals.length) {
+    list.innerHTML = '<div class="empty-detail">No signals</div>';
+    return;
+  }
+  list.innerHTML = signals.map(s => {
+    const detail = s.detail || {};
+    const detailHtml = Object.entries(detail)
+      .filter(([k, v]) => v && v !== "")
+      .map(([k, v]) => `<span><strong>${formatKey(k)}:</strong> ${esc(String(v))}</span>`)
+      .join("");
+    return `
+      <div class="signal-card">
+        <div class="signal-header">
+          <span class="signal-type">
+            <span class="pill pill-${s.source}">${formatSource(s.source)}</span>
+            ${formatSignalType(s.signal_type)}
+          </span>
+          <span class="signal-date">${formatDate(s.event_date)}</span>
+        </div>
+        <div class="signal-detail">${detailHtml}</div>
+      </div>`;
+  }).join("");
+}
+
+// --- Street View with lat/lng fallback ---
+async function loadStreetView(id, address, zip) {
+  const svWrap = document.getElementById("streetview-wrap");
+  // First try address-based embed
+  const query = encodeURIComponent(address + ", Seattle, WA " + zip);
+  svWrap.innerHTML = `<iframe src="https://www.google.com/maps/embed/v1/streetview?key=${API_KEY}&location=${query}&heading=0&pitch=0&fov=90"
+    allowfullscreen loading="lazy"></iframe>`;
+}
+
+// --- Sorting ---
+document.querySelectorAll("thead th[data-col]").forEach(th => {
+  th.addEventListener("click", () => {
+    const col = th.dataset.col;
+    if (state.sort === col) {
+      state.dir = state.dir === "asc" ? "desc" : "asc";
+    } else {
+      state.sort = col;
+      state.dir = col === "address_raw" || col === "zip_code" ? "asc" : "desc";
+    }
+    state.page = 1;
+    loadProperties();
+  });
+});
+
+// --- Filters ---
+let debounceTimer;
+document.getElementById("search").addEventListener("input", () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => { state.page = 1; loadProperties(); }, 300);
+});
+["filter-tier", "filter-zip", "filter-source", "filter-min-score"].forEach(id => {
+  document.getElementById(id).addEventListener("change", () => { state.page = 1; loadProperties(); });
+});
+
+// --- Pagination ---
+document.getElementById("prev-page").addEventListener("click", () => { state.page--; loadProperties(); });
+document.getElementById("next-page").addEventListener("click", () => { state.page++; loadProperties(); });
+
+// --- Helpers ---
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function formatSource(s) { return s.replace(/_/g, " ").replace("911", " 911"); }
+function formatSignalType(s) { return s.replace(/_/g, " "); }
+function formatKey(k) { return k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()); }
+function formatDate(d) {
+  if (!d) return "";
+  try { return new Date(d).toLocaleDateString(); } catch { return d; }
+}
+
+// --- Init ---
+loadStats();
+loadProperties();
+</script>
+</body>
+</html>

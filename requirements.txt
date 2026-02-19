@@ -20,3 +20,6 @@ python-telegram-bot>=21.0
 
 # Pipeline
 pyyaml>=6.0
+
+# UI
+flask>=3.0
