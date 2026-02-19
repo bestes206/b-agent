@@ -1,0 +1,45 @@
+# scoring_config.yaml — edit this to tune the scoring model
+
+# --- Signal weights by type ---
+# Each signal_type string (as extracted by fetchers) maps to a weight.
+# Add new signal types here as we add sources.
+signal_weights:
+  # Code violations (source: code_violations)
+  unfit_building: 10
+  vacant_building: 10
+  notice_of_violation: 10
+  citation: 10
+  complaint_construction: 5
+  complaint_landlord_tenant: 5
+  complaint_other: 3
+
+  # Building permits (source: permits)
+  expired_permit_major: 10    # estprojectcost > $50k
+  expired_permit_minor: 5
+  demolished: 5
+  permit_cancelled: 3
+
+  # Fire (source: fire_911)
+  residential_fire: 10
+  building_fire: 8
+
+  # URM (source: urm)
+  urm_high_risk_no_retrofit: 10
+  urm_no_retrofit: 5
+  urm_retrofitted: 2
+
+# --- Bonuses ---
+bonuses:
+  multi_source_threshold: 2     # number of distinct sources to trigger bonus
+  multi_source_points: 5
+
+# --- Recency ---
+recency:
+  boost_multiplier: 1.5         # applied to signals newer than cutoff
+  cutoff_days: 365
+
+# --- Tier thresholds ---
+tiers:
+  A: 25    # >= this score
+  B: 12    # >= this score
+  # below B = tier C
