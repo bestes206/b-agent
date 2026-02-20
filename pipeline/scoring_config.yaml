@@ -30,7 +30,13 @@ signal_weights:
   urm_no_retrofit: 5
   urm_retrofitted: 2
 
-  # Recent sales (source: king_county_sales)
+  # KC enrichment (source: kc_enrichment)
+  absentee_owner_out_of_state: 12
+  absentee_owner_in_state: 6
+  long_term_owner_20yr: 8
+  long_term_owner_10yr: 5
+  foreclosure: 15
+  low_improvement_ratio: 4
   recently_sold: -15            # negative — recent sale suggests active ownership
 
 # --- Bonuses ---

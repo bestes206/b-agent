@@ -39,5 +39,21 @@ DOWNLOADS_DIR = PROJECT_ROOT / "data" / "downloads"
 # Scoring config
 SCORING_CONFIG_PATH = Path(__file__).resolve().parent / "scoring_config.yaml"
 
+# King County GIS REST API
+KC_GIS_PARCELS_URL = (
+    "https://gismaps.kingcounty.gov/arcgis/rest/services"
+    "/Property/KingCo_PropertyInfo/MapServer/2/query"
+)
+KC_GIS_PAGE_SIZE = 1000
+
+# King County bulk CSV downloads
+KC_RPACCT_URL = "https://aqua.kingcounty.gov/extranet/assessor/Real%20Property%20Account.zip"
+KC_RPSALE_URL = "https://aqua.kingcounty.gov/extranet/assessor/Real%20Property%20Sales.zip"
+KC_DOWNLOAD_CACHE_DAYS = 7
+
+# King County SODA (foreclosures)
+KC_SODA_BASE = "https://data.kingcounty.gov/resource"
+KC_FORECLOSURE_DATASET = "nx4x-daw6"
+
 # Lat/lng proximity threshold for fuzzy matching (~10 meters)
 PROXIMITY_DEGREES = 0.0001

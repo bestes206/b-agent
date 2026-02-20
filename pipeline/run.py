@@ -26,7 +26,7 @@ from pipeline.fetchers.base import SODAFetcher
 from pipeline.fetchers.code_violations import CodeViolationsFetcher
 from pipeline.fetchers.fire_calls import FireCallsFetcher
 from pipeline.fetchers.permits import PermitsFetcher
-from pipeline.fetchers.recent_sales import RecentSalesFetcher
+from pipeline.fetchers.kc_enrichment import KCEnrichmentFetcher
 from pipeline.fetchers.urm_buildings import URMBuildingsFetcher
 from pipeline.normalize import normalize_address
 from pipeline.scoring import load_config, rescore_all
@@ -36,7 +36,7 @@ FETCHERS: Dict[str, Type] = {
     "permits": PermitsFetcher,
     "fire_911": FireCallsFetcher,
     "urm": URMBuildingsFetcher,
-    "king_county_sales": RecentSalesFetcher,
+    "kc_enrichment": KCEnrichmentFetcher,
 }
 
 
