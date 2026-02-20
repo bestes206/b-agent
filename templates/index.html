@@ -5,101 +5,354 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Distressed Properties — West Seattle</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #e0e0e0; }
+  :root {
+    --bg: #0c0e14;
+    --surface: #13151e;
+    --surface2: #1a1d2a;
+    --border: #242736;
+    --border-light: #2e3148;
+    --text: #e2e4ea;
+    --text-dim: #8b8fa4;
+    --text-muted: #5c6078;
+    --accent: #6c8aff;
+    --accent-dim: #3d5eff;
 
-  .layout { display: flex; height: 100vh; }
-  .panel-left { flex: 1; overflow-y: auto; padding: 16px; min-width: 0; }
-  .panel-right { width: 420px; border-left: 1px solid #2a2d35; display: flex; flex-direction: column; background: #161820; }
+    --red: #ef4444; --red-light: #fca5a5;
+    --blue: #3b82f6; --blue-light: #93c5fd;
+    --amber: #f59e0b; --amber-light: #fcd34d;
+    --purple: #8b5cf6; --purple-light: #c4b5fd;
+    --teal: #14b8a6; --teal-light: #5eead4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+  }
+
+  /* ---- Layout ---- */
+  .layout { display: flex; height: 100vh; overflow: hidden; }
+  .panel-left { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-width: 0; }
+  .panel-right {
+    width: 480px; border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; background: var(--surface);
+    transform: translateX(0); transition: transform 0.25s ease, opacity 0.25s ease;
+    opacity: 1;
+  }
   .panel-right.hidden { display: none; }
 
-  /* Header */
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-  .header h1 { font-size: 20px; font-weight: 600; color: #fff; }
-  .stats { font-size: 13px; color: #888; }
-  .stats span { margin-left: 12px; }
-
-  /* Filters */
-  .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-  .filters input, .filters select {
-    background: #1c1f2b; border: 1px solid #2a2d35; color: #e0e0e0;
-    padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none;
+  /* ---- Header ---- */
+  .header {
+    padding: 20px 24px 0 24px; flex-shrink: 0;
   }
-  .filters input:focus, .filters select:focus { border-color: #4a7dff; }
-  .filters input::placeholder { color: #555; }
-  .filter-group { display: flex; align-items: center; gap: 4px; }
-  .filter-group label { font-size: 12px; color: #888; white-space: nowrap; }
+  .header-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .header h1 {
+    font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.3px;
+    background: linear-gradient(135deg, #6c8aff, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header-subtitle { font-size: 12px; color: var(--text-muted); }
 
-  /* Table */
-  .table-wrap { overflow-x: auto; }
+  /* Stat cards */
+  .stat-cards {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    margin-bottom: 16px; padding: 0 24px;
+  }
+  .stat-card {
+    background: linear-gradient(135deg, rgba(108,138,255,0.08), rgba(167,139,250,0.04));
+    border: 1px solid rgba(108,138,255,0.15);
+    border-radius: 10px; padding: 14px 16px;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .stat-card .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .stat-card .stat-value { font-size: 24px; font-weight: 700; color: #fff; }
+
+  /* ---- Filters ---- */
+  .filter-bar {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 12px 24px; border-bottom: 1px solid var(--border);
+  }
+  .search-wrap {
+    position: relative; flex: 0 0 220px;
+  }
+  .search-wrap::before {
+    content: "\1F50D"; position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    font-size: 13px; opacity: 0.4;
+  }
+  .search-wrap input {
+    width: 100%; padding: 7px 10px 7px 32px;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.15s;
+  }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap input::placeholder { color: var(--text-muted); }
+
+  .filter-pill select {
+    appearance: none; -webkit-appearance: none;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 28px 7px 10px; border-radius: 8px; font-size: 13px;
+    outline: none; cursor: pointer; transition: border-color 0.15s;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235c6078'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+  }
+  .filter-pill select:focus { border-color: var(--accent); }
+  .filter-pill label {
+    font-size: 11px; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.4px; margin-right: 6px;
+  }
+  .filter-pill { display: flex; align-items: center; }
+
+  .min-score-input {
+    width: 72px; padding: 7px 10px;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.15s;
+  }
+  .min-score-input:focus { border-color: var(--accent); }
+  .min-score-input::placeholder { color: var(--text-muted); }
+
+  .active-filters { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 24px; }
+  .active-filters:empty { display: none; }
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(108,138,255,0.12); border: 1px solid rgba(108,138,255,0.25);
+    color: var(--accent); border-radius: 20px; padding: 3px 10px; font-size: 11px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .filter-chip:hover { background: rgba(108,138,255,0.2); }
+  .filter-chip .chip-x { font-size: 13px; opacity: 0.6; margin-left: 2px; }
+
+  /* ---- Table ---- */
+  .table-container { flex: 1; overflow: auto; padding: 0 24px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   thead th {
-    position: sticky; top: 0; background: #1a1d27; padding: 8px 10px;
-    text-align: left; font-weight: 600; color: #aaa; cursor: pointer;
-    border-bottom: 2px solid #2a2d35; user-select: none; white-space: nowrap;
+    position: sticky; top: 0; z-index: 2;
+    background: var(--bg); padding: 10px 12px;
+    text-align: left; font-weight: 600; color: var(--text-dim);
+    border-bottom: 1px solid var(--border); cursor: pointer;
+    user-select: none; white-space: nowrap; transition: color 0.15s;
   }
   thead th:hover { color: #fff; }
   thead th .arrow { margin-left: 4px; font-size: 10px; }
-  tbody tr { border-bottom: 1px solid #1e2130; cursor: pointer; transition: background 0.1s; }
-  tbody tr:hover { background: #1c2035; }
-  tbody tr.selected { background: #1e2a4a; }
-  td { padding: 7px 10px; white-space: nowrap; }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.12s;
+  }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+  tbody tr:hover { background: rgba(108,138,255,0.06); }
+  tbody tr.selected {
+    background: rgba(108,138,255,0.1);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  td { padding: 8px 12px; white-space: nowrap; }
 
   /* Tier badges */
-  .tier { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 12px; }
-  .tier-A { background: #2d6a2e; color: #6fcf6f; }
-  .tier-B { background: #5c5a1e; color: #d4cf5a; }
-  .tier-C { background: #333; color: #888; }
+  .tier {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 22px; border-radius: 5px;
+    font-weight: 700; font-size: 11px; letter-spacing: 0.3px;
+  }
+  .tier-A { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .tier-B { background: rgba(234,179,8,0.15); color: #fbbf24; }
+  .tier-C { background: rgba(107,114,128,0.15); color: #9ca3af; }
+
+  /* Inline score bar */
+  .score-cell { display: flex; align-items: center; gap: 8px; }
+  .score-bar-bg {
+    width: 60px; height: 6px; border-radius: 3px;
+    background: var(--border); overflow: hidden; flex-shrink: 0;
+  }
+  .score-bar-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+    transition: width 0.3s ease;
+  }
+  .score-val { font-weight: 600; font-variant-numeric: tabular-nums; min-width: 36px; }
 
   /* Source pills */
-  .pill { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 11px; margin-right: 3px; }
-  .pill-code_violations { background: #3a1f1f; color: #e88; }
-  .pill-permits { background: #1f2f3a; color: #6be; }
-  .pill-fire_911 { background: #3a2a1a; color: #eb6; }
-  .pill-urm { background: #2a1f3a; color: #b8e; }
-
-  /* Pagination */
-  .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 12px 0; font-size: 13px; }
-  .pagination button {
-    background: #1c1f2b; border: 1px solid #2a2d35; color: #e0e0e0;
-    padding: 4px 12px; border-radius: 4px; cursor: pointer;
+  .pill {
+    display: inline-block; padding: 2px 7px; border-radius: 4px;
+    font-size: 10px; font-weight: 600; margin-right: 3px; letter-spacing: 0.2px;
+    text-transform: uppercase;
   }
-  .pagination button:hover { border-color: #4a7dff; }
-  .pagination button:disabled { opacity: 0.3; cursor: default; }
-  .pagination .page-info { color: #888; }
+  .pill-code_violations { background: rgba(239,68,68,0.15); color: var(--red-light); }
+  .pill-permits { background: rgba(59,130,246,0.15); color: var(--blue-light); }
+  .pill-fire_911 { background: rgba(245,158,11,0.15); color: var(--amber-light); }
+  .pill-urm { background: rgba(139,92,246,0.15); color: var(--purple-light); }
+  .pill-kc_enrichment { background: rgba(20,184,166,0.15); color: var(--teal-light); }
 
-  /* Right panel */
-  .detail-header { padding: 16px; border-bottom: 1px solid #2a2d35; }
-  .detail-header h2 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
-  .detail-header .meta { font-size: 12px; color: #888; }
-  .streetview-wrap { height: 280px; background: #111; flex-shrink: 0; }
-  .streetview-wrap iframe { width: 100%; height: 100%; border: 0; }
-  .streetview-wrap img { width: 100%; height: 100%; object-fit: cover; }
-  .streetview-wrap .sv-fallback { display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 13px; }
-  .signals-list { flex: 1; overflow-y: auto; padding: 12px 16px; }
+  /* ---- Pagination ---- */
+  .pagination {
+    display: flex; justify-content: center; align-items: center; gap: 4px;
+    padding: 12px 24px; border-top: 1px solid var(--border); flex-shrink: 0;
+  }
+  .page-btn {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 5px 11px; border-radius: 6px; cursor: pointer; font-size: 13px;
+    transition: all 0.15s; min-width: 34px; text-align: center;
+  }
+  .page-btn:hover:not(:disabled) { border-color: var(--accent); color: #fff; }
+  .page-btn:disabled { opacity: 0.25; cursor: default; }
+  .page-btn.active { background: var(--accent-dim); border-color: var(--accent); color: #fff; }
+  .page-ellipsis { color: var(--text-muted); padding: 0 4px; font-size: 13px; }
+  .page-summary { color: var(--text-muted); font-size: 12px; margin-left: 12px; }
+
+  /* ---- Detail Panel ---- */
+  .detail-close {
+    position: absolute; top: 12px; right: 12px; background: none; border: none;
+    color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 4px 8px;
+    border-radius: 4px; transition: all 0.15s; line-height: 1;
+  }
+  .detail-close:hover { color: #fff; background: rgba(255,255,255,0.06); }
+
+  .detail-score-section {
+    position: relative; padding: 24px; display: flex; align-items: center; gap: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .score-gauge { flex-shrink: 0; }
+  .score-gauge svg { display: block; }
+  .score-gauge .gauge-track { fill: none; stroke: var(--border); stroke-width: 6; }
+  .score-gauge .gauge-fill { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+  .score-gauge .gauge-text { fill: #fff; font-size: 18px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+  .score-gauge .gauge-label { fill: var(--text-muted); font-size: 9px; text-anchor: middle; text-transform: uppercase; letter-spacing: 0.5px; }
+  .score-info h2 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px; line-height: 1.3; }
+  .score-info .score-tier {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dim);
+  }
+
+  .quick-facts {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border-bottom: 1px solid var(--border);
+  }
+  .quick-fact {
+    background: var(--surface); padding: 10px 14px; text-align: center;
+  }
+  .quick-fact .qf-value { font-size: 15px; font-weight: 600; color: #fff; }
+  .quick-fact .qf-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+
+  .streetview-wrap { height: 240px; background: #0a0c12; flex-shrink: 0; }
+  .streetview-wrap .sv-fallback {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; color: var(--text-muted); font-size: 13px;
+  }
+
+  /* Signal sections */
+  .signals-panel { flex: 1; overflow-y: auto; padding: 16px; }
+  .signal-group { margin-bottom: 16px; }
+  .signal-group-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-radius: 8px; margin-bottom: 6px;
+    cursor: pointer; transition: background 0.15s; user-select: none;
+  }
+  .signal-group-header:hover { background: rgba(255,255,255,0.03); }
+  .signal-group-title {
+    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .signal-group-badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+  }
+  .signal-group-chevron { font-size: 11px; color: var(--text-muted); transition: transform 0.2s; }
+  .signal-group.collapsed .signal-group-chevron { transform: rotate(-90deg); }
+  .signal-group.collapsed .signal-group-items { display: none; }
+
   .signal-card {
-    background: #1c1f2b; border: 1px solid #2a2d35; border-radius: 6px;
-    padding: 10px 12px; margin-bottom: 8px;
+    background: var(--surface2); border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 6px;
+    border-left: 3px solid var(--border);
+    transition: background 0.15s;
   }
-  .signal-card .signal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-  .signal-card .signal-type { font-weight: 600; font-size: 13px; color: #e0e0e0; }
-  .signal-card .signal-date { font-size: 11px; color: #888; }
-  .signal-card .signal-detail { font-size: 12px; color: #999; line-height: 1.5; }
+  .signal-card:hover { background: rgba(255,255,255,0.04); }
+  .signal-card .signal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+  .signal-card .signal-type { font-weight: 600; font-size: 13px; color: var(--text); }
+  .signal-card .signal-icon { margin-right: 6px; }
+  .signal-card .signal-date { font-size: 11px; color: var(--text-muted); }
+  .signal-card .signal-detail { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
   .signal-card .signal-detail span { display: block; }
-  .empty-detail { display: flex; align-items: center; justify-content: center; height: 100%; color: #555; font-size: 14px; }
+
+  /* Source border colors */
+  .signal-card.src-code_violations { border-left-color: var(--red); }
+  .signal-card.src-permits { border-left-color: var(--blue); }
+  .signal-card.src-fire_911 { border-left-color: var(--amber); }
+  .signal-card.src-urm { border-left-color: var(--purple); }
+  .signal-card.src-kc_enrichment { border-left-color: var(--teal); }
+
+  /* Source group header colors */
+  .sg-code_violations .signal-group-title { color: var(--red-light); }
+  .sg-code_violations .signal-group-badge { background: rgba(239,68,68,0.15); color: var(--red-light); }
+  .sg-permits .signal-group-title { color: var(--blue-light); }
+  .sg-permits .signal-group-badge { background: rgba(59,130,246,0.15); color: var(--blue-light); }
+  .sg-fire_911 .signal-group-title { color: var(--amber-light); }
+  .sg-fire_911 .signal-group-badge { background: rgba(245,158,11,0.15); color: var(--amber-light); }
+  .sg-urm .signal-group-title { color: var(--purple-light); }
+  .sg-urm .signal-group-badge { background: rgba(139,92,246,0.15); color: var(--purple-light); }
+  .sg-kc_enrichment .signal-group-title { color: var(--teal-light); }
+  .sg-kc_enrichment .signal-group-badge { background: rgba(20,184,166,0.15); color: var(--teal-light); }
+
+  .empty-detail {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; color: var(--text-muted); font-size: 14px;
+  }
+
+  /* Score breakdown bar */
+  .breakdown-bar {
+    display: flex; height: 8px; border-radius: 4px; overflow: hidden;
+    margin-top: 12px; background: var(--border);
+  }
+  .breakdown-seg { height: 100%; transition: width 0.4s ease; min-width: 0; }
+  .breakdown-seg.seg-code_violations { background: var(--red); }
+  .breakdown-seg.seg-permits { background: var(--blue); }
+  .breakdown-seg.seg-fire_911 { background: var(--amber); }
+  .breakdown-seg.seg-urm { background: var(--purple); }
+  .breakdown-seg.seg-kc_enrichment { background: var(--teal); }
+  .breakdown-legend {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 11px;
+  }
+  .breakdown-legend-item { display: flex; align-items: center; gap: 4px; color: var(--text-dim); }
+  .breakdown-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 </style>
 </head>
 <body>
 <div class="layout">
   <div class="panel-left">
+    <!-- Header -->
     <div class="header">
-      <h1>Distressed Properties</h1>
-      <div class="stats" id="stats"></div>
+      <div class="header-top">
+        <div>
+          <h1>Distressed Properties</h1>
+          <div class="header-subtitle">West Seattle Investment Dashboard</div>
+        </div>
+      </div>
     </div>
 
-    <div class="filters">
-      <input type="text" id="search" placeholder="Search address..." style="width: 200px;">
-      <div class="filter-group">
+    <!-- Stat cards -->
+    <div class="stat-cards" id="stat-cards">
+      <div class="stat-card">
+        <div class="stat-label">Properties</div>
+        <div class="stat-value" id="stat-total">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Signals</div>
+        <div class="stat-value" id="stat-signals">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tier A</div>
+        <div class="stat-value" id="stat-tier-a">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tier B</div>
+        <div class="stat-value" id="stat-tier-b">--</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <input type="text" id="search" placeholder="Search address...">
+      </div>
+      <div class="filter-pill">
         <label>Tier</label>
         <select id="filter-tier">
           <option value="">All</option>
@@ -108,18 +361,11 @@
           <option value="C">C</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="filter-pill">
         <label>Zip</label>
-        <select id="filter-zip">
-          <option value="">All</option>
-          <option value="98106">98106</option>
-          <option value="98116">98116</option>
-          <option value="98126">98126</option>
-          <option value="98136">98136</option>
-          <option value="98146">98146</option>
-        </select>
+        <select id="filter-zip"><option value="">All</option></select>
       </div>
-      <div class="filter-group">
+      <div class="filter-pill">
         <label>Source</label>
         <select id="filter-source">
           <option value="">All</option>
@@ -127,60 +373,125 @@
           <option value="permits">Permits</option>
           <option value="fire_911">Fire 911</option>
           <option value="urm">URM</option>
+          <option value="kc_enrichment">KC Enrichment</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="filter-pill">
         <label>Min Score</label>
-        <input type="number" id="filter-min-score" style="width: 70px;" placeholder="0">
+        <input type="number" class="min-score-input" id="filter-min-score" placeholder="0">
       </div>
     </div>
+    <div class="active-filters" id="active-filters"></div>
 
-    <div class="table-wrap">
+    <!-- Table -->
+    <div class="table-container">
       <table>
         <thead>
           <tr>
-            <th data-col="tier">Tier <span class="arrow"></span></th>
-            <th data-col="total_score">Score <span class="arrow"></span></th>
+            <th data-col="tier" style="width:50px;">Tier <span class="arrow"></span></th>
+            <th data-col="total_score" style="width:140px;">Score <span class="arrow"></span></th>
             <th data-col="address_raw">Address <span class="arrow"></span></th>
-            <th data-col="zip_code">Zip <span class="arrow"></span></th>
-            <th data-col="signal_count">Signals <span class="arrow"></span></th>
-            <th data-col="source_count">Sources <span class="arrow"></span></th>
-            <th>Tags</th>
+            <th data-col="zip_code" style="width:70px;">Zip <span class="arrow"></span></th>
+            <th data-col="signal_count" style="width:70px;">Signals <span class="arrow"></span></th>
+            <th style="min-width:120px;">Sources</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
 
-    <div class="pagination">
-      <button id="prev-page">&laquo; Prev</button>
-      <span class="page-info" id="page-info"></span>
-      <button id="next-page">Next &raquo;</button>
-    </div>
+    <!-- Pagination -->
+    <div class="pagination" id="pagination"></div>
   </div>
 
+  <!-- Detail panel -->
   <div class="panel-right hidden" id="detail-panel">
-    <div class="detail-header">
-      <h2 id="detail-address"></h2>
-      <div class="meta" id="detail-meta"></div>
+    <div class="detail-score-section">
+      <button class="detail-close" onclick="closeDetail()" title="Close (Esc)">&times;</button>
+      <div class="score-gauge" id="score-gauge"></div>
+      <div class="score-info">
+        <h2 id="detail-address"></h2>
+        <div class="score-tier" id="detail-tier-line"></div>
+        <div class="breakdown-bar" id="breakdown-bar"></div>
+        <div class="breakdown-legend" id="breakdown-legend"></div>
+      </div>
+    </div>
+    <div class="quick-facts" id="quick-facts">
+      <div class="quick-fact"><div class="qf-value" id="qf-signals">--</div><div class="qf-label">Signals</div></div>
+      <div class="quick-fact"><div class="qf-value" id="qf-sources">--</div><div class="qf-label">Sources</div></div>
+      <div class="quick-fact"><div class="qf-value" id="qf-zip">--</div><div class="qf-label">Zip</div></div>
     </div>
     <div class="streetview-wrap" id="streetview-wrap"></div>
-    <div class="signals-list" id="signals-list"></div>
+    <div class="signals-panel" id="signals-panel"></div>
   </div>
 </div>
 
 <script>
 const API_KEY = "{{ google_maps_api_key }}";
-let state = { page: 1, sort: "total_score", dir: "desc", selected: null };
-let propertiesCache = {};  // id -> property data
+let state = { page: 1, sort: "total_score", dir: "desc", selected: null, maxScore: 1 };
+let propertiesCache = {};
+let propertiesList = [];
 
-// --- Fetch & render ---
+// --- Signal display names ---
+const SIGNAL_NAMES = {
+  absentee_owner_out_of_state: { label: "Out-of-State Owner", icon: "\u2708" },
+  absentee_owner_in_state:     { label: "In-State Absentee", icon: "\uD83C\uDFE0" },
+  long_term_owner_20yr:        { label: "20+ Year Owner", icon: "\u231B" },
+  long_term_owner_10yr:        { label: "10+ Year Owner", icon: "\u23F3" },
+  foreclosure:                 { label: "Foreclosure", icon: "\u26A0" },
+  low_improvement_ratio:       { label: "Low Improvement Ratio", icon: "\uD83D\uDCC9" },
+  recently_sold:               { label: "Recently Sold", icon: "\uD83D\uDCB0" },
+  unfit_building:              { label: "Unfit Building", icon: "\uD83D\uDEA7" },
+  vacant_building:             { label: "Vacant Building", icon: "\uD83D\uDEAB" },
+  demolition:                  { label: "Demolition", icon: "\uD83D\uDCA5" },
+  fire_damage:                 { label: "Fire Damage", icon: "\uD83D\uDD25" },
+  expired_permit:              { label: "Expired Permit", icon: "\u23F0" },
+  open_violation:              { label: "Open Violation", icon: "\u274C" },
+  repeat_violation:            { label: "Repeat Violation", icon: "\uD83D\uDD04" },
+  structural_concern:          { label: "Structural Concern", icon: "\u26D1" },
+};
+
+const SOURCE_NAMES = {
+  code_violations: "Code Violations",
+  permits: "Permits",
+  fire_911: "Fire / 911",
+  urm: "URM",
+  kc_enrichment: "KC Enrichment",
+};
+
+const SOURCE_COLORS = {
+  code_violations: { main: "#ef4444", light: "#fca5a5" },
+  permits:         { main: "#3b82f6", light: "#93c5fd" },
+  fire_911:        { main: "#f59e0b", light: "#fcd34d" },
+  urm:             { main: "#8b5cf6", light: "#c4b5fd" },
+  kc_enrichment:   { main: "#14b8a6", light: "#5eead4" },
+};
+
+// ======================== Data loading ========================
+
+async function loadStats() {
+  const resp = await fetch("/api/stats");
+  const data = await resp.json();
+  document.getElementById("stat-total").textContent = data.total_properties.toLocaleString();
+  document.getElementById("stat-signals").textContent = data.total_signals.toLocaleString();
+  document.getElementById("stat-tier-a").textContent = (data.tiers["A"] || 0).toLocaleString();
+  document.getElementById("stat-tier-b").textContent = (data.tiers["B"] || 0).toLocaleString();
+
+  // Populate zip filter dynamically
+  const zipSelect = document.getElementById("filter-zip");
+  const currentVal = zipSelect.value;
+  zipSelect.innerHTML = '<option value="">All</option>';
+  Object.keys(data.zips).sort().forEach(z => {
+    const opt = document.createElement("option");
+    opt.value = z; opt.textContent = z;
+    zipSelect.appendChild(opt);
+  });
+  if (currentVal) zipSelect.value = currentVal;
+}
+
 async function loadProperties() {
   const params = new URLSearchParams({
-    page: state.page,
-    sort: state.sort,
-    dir: state.dir,
-    per_page: 50,
+    page: state.page, sort: state.sort, dir: state.dir, per_page: 50,
   });
   const tier = document.getElementById("filter-tier").value;
   const zip = document.getElementById("filter-zip").value;
@@ -196,78 +507,158 @@ async function loadProperties() {
 
   const resp = await fetch("/api/properties?" + params);
   const data = await resp.json();
+
+  propertiesList = data.properties;
+  propertiesList.forEach(p => { propertiesCache[p.id] = p; });
+
+  // Track max score for bar scaling
+  if (data.properties.length > 0) {
+    const pageMax = Math.max(...data.properties.map(p => p.total_score));
+    if (state.page === 1) state.maxScore = pageMax;
+    else state.maxScore = Math.max(state.maxScore, pageMax);
+  }
+
   renderTable(data.properties);
   renderPagination(data);
+  renderActiveFilters();
 }
 
+// ======================== Table rendering ========================
+
 function renderTable(properties) {
-  properties.forEach(p => { propertiesCache[p.id] = p; });
   const tbody = document.getElementById("tbody");
-  tbody.innerHTML = properties.map(p => `
-    <tr data-id="${p.id}" class="${state.selected === p.id ? 'selected' : ''}"
-        onclick="selectProperty(${p.id}, this)">
+  tbody.innerHTML = properties.map((p, i) => {
+    const pct = state.maxScore > 0 ? (p.total_score / state.maxScore * 100) : 0;
+    return `
+    <tr data-id="${p.id}" data-idx="${i}" class="${state.selected === p.id ? 'selected' : ''}">
       <td><span class="tier tier-${p.tier}">${p.tier}</span></td>
-      <td>${p.total_score.toFixed(1)}</td>
+      <td>
+        <div class="score-cell">
+          <span class="score-val">${p.total_score.toFixed(1)}</span>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pct}%"></div></div>
+        </div>
+      </td>
       <td>${esc(p.address_raw)}</td>
       <td>${p.zip_code || ""}</td>
       <td>${p.signal_count}</td>
-      <td>${p.source_count}</td>
       <td>${p.sources.map(s => `<span class="pill pill-${s}">${formatSource(s)}</span>`).join("")}</td>
-    </tr>
-  `).join("");
+    </tr>`;
+  }).join("");
 
-  // Update sort arrows
+  // Sort arrows
   document.querySelectorAll("thead th").forEach(th => {
     const col = th.dataset.col;
     const arrow = th.querySelector(".arrow");
     if (!arrow) return;
-    if (col === state.sort) {
-      arrow.textContent = state.dir === "asc" ? "\u25B2" : "\u25BC";
-    } else {
-      arrow.textContent = "";
-    }
+    arrow.textContent = col === state.sort ? (state.dir === "asc" ? "\u25B2" : "\u25BC") : "";
+  });
+
+  // Attach click handlers
+  tbody.querySelectorAll("tr").forEach(tr => {
+    tr.addEventListener("click", () => selectProperty(parseInt(tr.dataset.id)));
   });
 }
 
+// ======================== Pagination ========================
+
 function renderPagination(data) {
-  document.getElementById("page-info").textContent =
-    `Page ${data.page} of ${data.pages} (${data.total.toLocaleString()} properties)`;
-  document.getElementById("prev-page").disabled = data.page <= 1;
-  document.getElementById("next-page").disabled = data.page >= data.pages;
+  const container = document.getElementById("pagination");
+  if (data.pages <= 1) { container.innerHTML = ""; return; }
+
+  let html = "";
+  html += `<button class="page-btn" ${data.page <= 1 ? "disabled" : ""} data-page="${data.page - 1}">&laquo;</button>`;
+
+  const pages = buildPageRange(data.page, data.pages);
+  pages.forEach(p => {
+    if (p === "...") {
+      html += `<span class="page-ellipsis">...</span>`;
+    } else {
+      html += `<button class="page-btn ${p === data.page ? 'active' : ''}" data-page="${p}">${p}</button>`;
+    }
+  });
+
+  html += `<button class="page-btn" ${data.page >= data.pages ? "disabled" : ""} data-page="${data.page + 1}">&raquo;</button>`;
+  html += `<span class="page-summary">${data.total.toLocaleString()} properties</span>`;
+
+  container.innerHTML = html;
+  container.querySelectorAll(".page-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      state.page = parseInt(btn.dataset.page);
+      loadProperties();
+    });
+  });
 }
 
-async function loadStats() {
-  const resp = await fetch("/api/stats");
-  const data = await resp.json();
-  document.getElementById("stats").innerHTML =
-    `<span>${data.total_properties.toLocaleString()} properties</span>` +
-    `<span>${data.total_signals.toLocaleString()} signals</span>` +
-    Object.entries(data.tiers).map(([t, c]) =>
-      `<span>Tier ${t}: ${c.toLocaleString()}</span>`
-    ).join("");
+function buildPageRange(current, total) {
+  if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+  const pages = [];
+  pages.push(1);
+  if (current > 3) pages.push("...");
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+  if (current < total - 2) pages.push("...");
+  pages.push(total);
+  return pages;
 }
 
-// --- Property detail ---
-async function selectProperty(id, row) {
+// ======================== Active filter chips ========================
+
+function renderActiveFilters() {
+  const container = document.getElementById("active-filters");
+  const chips = [];
+  const tier = document.getElementById("filter-tier").value;
+  const zip = document.getElementById("filter-zip").value;
+  const source = document.getElementById("filter-source").value;
+  const minScore = document.getElementById("filter-min-score").value;
+  const search = document.getElementById("search").value;
+
+  if (tier) chips.push({ label: `Tier: ${tier}`, clear: () => { document.getElementById("filter-tier").value = ""; } });
+  if (zip) chips.push({ label: `Zip: ${zip}`, clear: () => { document.getElementById("filter-zip").value = ""; } });
+  if (source) chips.push({ label: `Source: ${formatSource(source)}`, clear: () => { document.getElementById("filter-source").value = ""; } });
+  if (minScore) chips.push({ label: `Score >= ${minScore}`, clear: () => { document.getElementById("filter-min-score").value = ""; } });
+  if (search) chips.push({ label: `"${search}"`, clear: () => { document.getElementById("search").value = ""; } });
+
+  container.innerHTML = chips.map((c, i) =>
+    `<span class="filter-chip" data-idx="${i}">${esc(c.label)} <span class="chip-x">&times;</span></span>`
+  ).join("");
+
+  container.querySelectorAll(".filter-chip").forEach((el, i) => {
+    el.addEventListener("click", () => {
+      chips[i].clear();
+      state.page = 1;
+      loadProperties();
+    });
+  });
+}
+
+// ======================== Property detail ========================
+
+async function selectProperty(id) {
   state.selected = id;
-  document.querySelectorAll("tbody tr").forEach(r => r.classList.remove("selected"));
-  row.classList.add("selected");
+  document.querySelectorAll("tbody tr").forEach(r => r.classList.toggle("selected", parseInt(r.dataset.id) === id));
 
   const panel = document.getElementById("detail-panel");
   panel.classList.remove("hidden");
 
   const p = propertiesCache[id];
   document.getElementById("detail-address").textContent = p.address_raw;
-  document.getElementById("detail-meta").textContent =
-    `${p.zip_code || ""} \u2022 Tier ${p.tier} \u2022 Score ${p.total_score.toFixed(1)}`;
+  document.getElementById("detail-tier-line").innerHTML =
+    `<span class="tier tier-${p.tier}">${p.tier}</span> ${p.zip_code || ""} &middot; Score ${p.total_score.toFixed(1)}`;
 
-  // Street View — JS API finds nearest panorama and computes heading to face property
+  // Quick facts
+  document.getElementById("qf-signals").textContent = p.signal_count;
+  document.getElementById("qf-sources").textContent = p.source_count;
+  document.getElementById("qf-zip").textContent = p.zip_code || "--";
+
+  // Score gauge
+  renderScoreGauge(p.total_score);
+
+  // Street View
   const svWrap = document.getElementById("streetview-wrap");
   svWrap.innerHTML = "";
   if (p.latitude && p.longitude) {
     showStreetView(svWrap, p.latitude, p.longitude);
   } else {
-    // Geocode the address first, then show street view
     const geocoder = new google.maps.Geocoder();
     const addr = p.address_raw + ", Seattle, WA " + (p.zip_code || "");
     geocoder.geocode({ address: addr }, (results, status) => {
@@ -280,68 +671,140 @@ async function selectProperty(id, row) {
     });
   }
 
-  // Load signals
-  const resp = await fetch(`/api/properties/${id}/signals`);
-  const signals = await resp.json();
+  // Load signals + breakdown in parallel
+  const [signalsResp, breakdownResp] = await Promise.all([
+    fetch(`/api/properties/${id}/signals`),
+    fetch(`/api/properties/${id}/breakdown`),
+  ]);
+  const signals = await signalsResp.json();
+  const breakdown = await breakdownResp.json();
+
+  renderBreakdown(breakdown, p.total_score);
   renderSignals(signals);
 }
 
-function renderSignals(signals) {
-  const list = document.getElementById("signals-list");
-  if (!signals.length) {
-    list.innerHTML = '<div class="empty-detail">No signals</div>';
+function closeDetail() {
+  document.getElementById("detail-panel").classList.add("hidden");
+  state.selected = null;
+  document.querySelectorAll("tbody tr.selected").forEach(r => r.classList.remove("selected"));
+}
+
+// ======================== Score gauge (SVG circle) ========================
+
+function renderScoreGauge(score) {
+  const container = document.getElementById("score-gauge");
+  const radius = 38;
+  const circumference = 2 * Math.PI * radius;
+  const pct = Math.min(score / Math.max(state.maxScore, 1), 1);
+  const offset = circumference * (1 - pct);
+
+  container.innerHTML = `
+    <svg width="96" height="96" viewBox="0 0 96 96">
+      <circle class="gauge-track" cx="48" cy="48" r="${radius}" />
+      <circle class="gauge-fill" cx="48" cy="48" r="${radius}"
+        stroke="url(#gaugeGrad)"
+        stroke-dasharray="${circumference}"
+        stroke-dashoffset="${offset}"
+        transform="rotate(-90 48 48)" />
+      <text class="gauge-text" x="48" y="44">${score.toFixed(0)}</text>
+      <text class="gauge-label" x="48" y="60">score</text>
+      <defs>
+        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#6c8aff" />
+          <stop offset="100%" stop-color="#a78bfa" />
+        </linearGradient>
+      </defs>
+    </svg>`;
+}
+
+// ======================== Score breakdown ========================
+
+function renderBreakdown(breakdown, total) {
+  const bar = document.getElementById("breakdown-bar");
+  const legend = document.getElementById("breakdown-legend");
+  if (!breakdown || Object.keys(breakdown).length === 0) {
+    bar.innerHTML = ""; legend.innerHTML = "";
     return;
   }
-  list.innerHTML = signals.map(s => {
-    const detail = s.detail || {};
-    const detailHtml = Object.entries(detail)
-      .filter(([k, v]) => v && v !== "")
-      .map(([k, v]) => `<span><strong>${formatKey(k)}:</strong> ${esc(String(v))}</span>`)
-      .join("");
+  const sum = Object.values(breakdown).reduce((a, b) => a + b, 0) || 1;
+  bar.innerHTML = Object.entries(breakdown)
+    .sort((a, b) => b[1] - a[1])
+    .map(([src, val]) => `<div class="breakdown-seg seg-${src}" style="width:${(val / sum * 100).toFixed(1)}%"></div>`)
+    .join("");
+
+  legend.innerHTML = Object.entries(breakdown)
+    .sort((a, b) => b[1] - a[1])
+    .map(([src, val]) => {
+      const color = SOURCE_COLORS[src]?.main || "#888";
+      return `<span class="breakdown-legend-item">
+        <span class="breakdown-dot" style="background:${color}"></span>
+        ${SOURCE_NAMES[src] || src} (${val.toFixed(1)})
+      </span>`;
+    }).join("");
+}
+
+// ======================== Signals (grouped) ========================
+
+function renderSignals(signals) {
+  const panel = document.getElementById("signals-panel");
+  if (!signals.length) {
+    panel.innerHTML = '<div class="empty-detail">No signals</div>';
+    return;
+  }
+
+  // Group by source
+  const groups = {};
+  signals.forEach(s => {
+    if (!groups[s.source]) groups[s.source] = [];
+    groups[s.source].push(s);
+  });
+
+  const sourceOrder = ["kc_enrichment", "code_violations", "permits", "fire_911", "urm"];
+  const sortedSources = Object.keys(groups).sort((a, b) => {
+    const ia = sourceOrder.indexOf(a), ib = sourceOrder.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+
+  panel.innerHTML = sortedSources.map(src => {
+    const items = groups[src];
     return `
-      <div class="signal-card">
-        <div class="signal-header">
-          <span class="signal-type">
-            <span class="pill pill-${s.source}">${formatSource(s.source)}</span>
-            ${formatSignalType(s.signal_type)}
+      <div class="signal-group sg-${src}">
+        <div class="signal-group-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          <span class="signal-group-title">${SOURCE_NAMES[src] || src}</span>
+          <span>
+            <span class="signal-group-badge">${items.length}</span>
+            <span class="signal-group-chevron">\u25BC</span>
           </span>
-          <span class="signal-date">${formatDate(s.event_date)}</span>
         </div>
-        <div class="signal-detail">${detailHtml}</div>
+        <div class="signal-group-items">
+          ${items.map(s => renderSignalCard(s)).join("")}
+        </div>
       </div>`;
   }).join("");
 }
 
-// --- Sorting ---
-document.querySelectorAll("thead th[data-col]").forEach(th => {
-  th.addEventListener("click", () => {
-    const col = th.dataset.col;
-    if (state.sort === col) {
-      state.dir = state.dir === "asc" ? "desc" : "asc";
-    } else {
-      state.sort = col;
-      state.dir = col === "address_raw" || col === "zip_code" ? "asc" : "desc";
-    }
-    state.page = 1;
-    loadProperties();
-  });
-});
+function renderSignalCard(s) {
+  const detail = s.detail || {};
+  const detailHtml = Object.entries(detail)
+    .filter(([k, v]) => v != null && v !== "")
+    .map(([k, v]) => `<span><strong>${formatKey(k)}:</strong> ${esc(String(v))}</span>`)
+    .join("");
 
-// --- Filters ---
-let debounceTimer;
-document.getElementById("search").addEventListener("input", () => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => { state.page = 1; loadProperties(); }, 300);
-});
-["filter-tier", "filter-zip", "filter-source", "filter-min-score"].forEach(id => {
-  document.getElementById(id).addEventListener("change", () => { state.page = 1; loadProperties(); });
-});
+  const info = SIGNAL_NAMES[s.signal_type] || { label: formatSignalType(s.signal_type), icon: "" };
+  return `
+    <div class="signal-card src-${s.source}">
+      <div class="signal-header">
+        <span class="signal-type">
+          ${info.icon ? `<span class="signal-icon">${info.icon}</span>` : ""}${info.label}
+        </span>
+        <span class="signal-date">${formatDate(s.event_date)}</span>
+      </div>
+      ${detailHtml ? `<div class="signal-detail">${detailHtml}</div>` : ""}
+    </div>`;
+}
 
-// --- Pagination ---
-document.getElementById("prev-page").addEventListener("click", () => { state.page--; loadProperties(); });
-document.getElementById("next-page").addEventListener("click", () => { state.page++; loadProperties(); });
+// ======================== Street View ========================
 
-// --- Street View ---
 function showStreetView(container, lat, lng) {
   const propertyPos = new google.maps.LatLng(lat, lng);
   const svService = new google.maps.StreetViewService();
@@ -362,17 +825,88 @@ function showStreetView(container, lat, lng) {
   });
 }
 
-// --- Helpers ---
+// ======================== Sorting ========================
+
+document.querySelectorAll("thead th[data-col]").forEach(th => {
+  th.addEventListener("click", () => {
+    const col = th.dataset.col;
+    if (state.sort === col) {
+      state.dir = state.dir === "asc" ? "desc" : "asc";
+    } else {
+      state.sort = col;
+      state.dir = col === "address_raw" || col === "zip_code" ? "asc" : "desc";
+    }
+    state.page = 1;
+    loadProperties();
+  });
+});
+
+// ======================== Filters ========================
+
+let debounceTimer;
+document.getElementById("search").addEventListener("input", () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => { state.page = 1; loadProperties(); }, 300);
+});
+["filter-tier", "filter-zip", "filter-source", "filter-min-score"].forEach(id => {
+  document.getElementById(id).addEventListener("change", () => { state.page = 1; loadProperties(); });
+});
+
+// ======================== Keyboard navigation ========================
+
+document.addEventListener("keydown", (e) => {
+  // Don't capture when typing in inputs
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") return;
+
+  if (e.key === "Escape") {
+    closeDetail();
+    return;
+  }
+
+  if (e.key === "j" || e.key === "ArrowDown" || e.key === "k" || e.key === "ArrowUp") {
+    e.preventDefault();
+    const rows = Array.from(document.querySelectorAll("tbody tr"));
+    if (rows.length === 0) return;
+
+    let currentIdx = -1;
+    if (state.selected != null) {
+      currentIdx = rows.findIndex(r => parseInt(r.dataset.id) === state.selected);
+    }
+
+    if (e.key === "j" || e.key === "ArrowDown") {
+      currentIdx = Math.min(currentIdx + 1, rows.length - 1);
+    } else {
+      currentIdx = Math.max(currentIdx - 1, 0);
+    }
+
+    const id = parseInt(rows[currentIdx].dataset.id);
+    selectProperty(id);
+    rows[currentIdx].scrollIntoView({ block: "nearest" });
+    return;
+  }
+
+  if (e.key === "Enter" && state.selected != null) {
+    // Already selected, just ensure panel is open
+    document.getElementById("detail-panel").classList.remove("hidden");
+    return;
+  }
+});
+
+// ======================== Helpers ========================
+
 function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
-function formatSource(s) { return s.replace(/_/g, " ").replace("911", " 911"); }
-function formatSignalType(s) { return s.replace(/_/g, " "); }
+function formatSource(s) { return SOURCE_NAMES[s] || s.replace(/_/g, " "); }
+function formatSignalType(s) {
+  return s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
 function formatKey(k) { return k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()); }
 function formatDate(d) {
   if (!d) return "";
   try { return new Date(d).toLocaleDateString(); } catch { return d; }
 }
 
-// --- Init ---
+// ======================== Init ========================
+
 loadStats();
 loadProperties();
 </script>

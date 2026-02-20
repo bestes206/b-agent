@@ -3,9 +3,12 @@
 import json
 import os
 import sqlite3
+from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
+
+from pipeline.scoring import load_config as load_scoring_config
 
 load_dotenv()
 
@@ -147,6 +150,64 @@ def api_signals(property_id):
 
     conn.close()
     return jsonify(signals)
+
+
+@app.route("/api/properties/<int:property_id>/breakdown")
+def api_breakdown(property_id):
+    """Per-source score subtotals using the same logic as pipeline/scoring.py."""
+    config = load_scoring_config()
+    weights = config.get("signal_weights", {})
+    recency = config.get("recency", {})
+    status_multipliers = config.get("status_multipliers", {})
+
+    max_age_days = recency.get("max_age_days", 1825)
+    decay_boost = recency.get("decay_boost", 0.5)
+    now = datetime.now(timezone.utc)
+    max_age_cutoff = now - timedelta(days=max_age_days)
+
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT signal_type, event_date, source, detail FROM signals WHERE property_id = ?",
+        (property_id,),
+    ).fetchall()
+    conn.close()
+
+    by_source = {}
+    for row in rows:
+        signal_type = row["signal_type"]
+        source = row["source"]
+        base_weight = weights.get(signal_type, 1)
+
+        # Decay curve
+        decay_mult = 1.0
+        event_date_str = row["event_date"]
+        if event_date_str:
+            try:
+                event_date = datetime.fromisoformat(event_date_str.replace("Z", "+00:00"))
+                if event_date.tzinfo is None:
+                    event_date = event_date.replace(tzinfo=timezone.utc)
+                if event_date < max_age_cutoff:
+                    continue
+                age_days = (now - event_date).days
+                decay_mult = 1.0 + decay_boost * max(0, 1 - age_days / max_age_days)
+            except (ValueError, TypeError):
+                pass
+
+        # Status multiplier
+        status_mult = 1.0
+        detail_str = row["detail"]
+        if detail_str and source in status_multipliers:
+            try:
+                detail = json.loads(detail_str)
+                status = (detail.get("status") or "").lower().strip()
+                if status in status_multipliers[source]:
+                    status_mult = status_multipliers[source][status]
+            except (json.JSONDecodeError, TypeError, AttributeError):
+                pass
+
+        by_source[source] = by_source.get(source, 0) + base_weight * decay_mult * status_mult
+
+    return jsonify(by_source)
 
 
 @app.route("/api/stats")
