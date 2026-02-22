@@ -49,6 +49,12 @@ recency:
   max_age_days: 1825            # 5 years — older signals excluded entirely
   decay_boost: 0.5              # at age 0: 1.5x, at max_age: 1.0x (linear)
 
+  # Per-source overrides — tighter cutoffs or steeper curves for specific sources
+  source_overrides:
+    code_violations:
+      max_age_days: 730         # 2 years — drop old violations entirely
+      decay_boost: 1.0          # at age 0: 2.0x, at 2yr: 1.0x (strong recency premium)
+
 # --- Status multipliers ---
 # Per-source penalties for resolved/closed statuses.
 # Signals with these statuses get their weight multiplied down.

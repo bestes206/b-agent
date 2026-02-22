@@ -35,10 +35,10 @@ def score_property(conn: sqlite3.Connection, property_id: int, config: Dict[str,
     tiers = config.get("tiers", {})
     status_multipliers = config.get("status_multipliers", {})
 
-    max_age_days = recency.get("max_age_days", 1825)
-    decay_boost = recency.get("decay_boost", 0.5)
+    default_max_age_days = recency.get("max_age_days", 1825)
+    default_decay_boost = recency.get("decay_boost", 0.5)
+    source_overrides = recency.get("source_overrides", {})
     now = datetime.now(timezone.utc)
-    max_age_cutoff = now - timedelta(days=max_age_days)
 
     rows = conn.execute(
         "SELECT signal_type, event_date, source, detail FROM signals WHERE property_id = ?",
@@ -51,6 +51,13 @@ def score_property(conn: sqlite3.Connection, property_id: int, config: Dict[str,
     for row in rows:
         signal_type = row["signal_type"]
         base_weight = weights.get(signal_type, 1)
+        source = row["source"]
+
+        # --- Per-source recency overrides ---
+        src_cfg = source_overrides.get(source, {})
+        max_age_days = src_cfg.get("max_age_days", default_max_age_days)
+        decay_boost = src_cfg.get("decay_boost", default_decay_boost)
+        max_age_cutoff = now - timedelta(days=max_age_days)
 
         # --- Max age exclusion & decay curve ---
         event_date_str = row["event_date"]
@@ -75,7 +82,6 @@ def score_property(conn: sqlite3.Connection, property_id: int, config: Dict[str,
 
         # --- Status multiplier ---
         status_mult = 1.0
-        source = row["source"]
         detail_str = row["detail"]
 
         if detail_str and source in status_multipliers:
